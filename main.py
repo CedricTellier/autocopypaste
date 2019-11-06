@@ -1,96 +1,96 @@
-import time
 import logging
-from watchdog.observers import Observer
+import os
+import shutil
 import sys
-from watchdog.events import LoggingEventHandler
+import time
+from os.path import expanduser
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
-    event_handler = LoggingEventHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+from watchdog.events import PatternMatchingEventHandler
+from watchdog.observers import Observer
 
 
-# Goal f the file
-# Select the folder Downlad and automate transfer of specific extension file
-# 1 get directory
-# 2 list all file in it
-# retrieve by extension
-# automate transfer
+class launcher():
+    def __init__(self):
+        self.downloadPath = expanduser("~/Downloads")
+        self.extensionList = [(".exe", "D:/Executables"),
+                              (".ifc", "D:/Fichiers IFC")]
+        self.processed = 0
+        self.launchObserver()
 
-# 1 get Directory of Downlad
-# import os
-# import shutil
-# from os.path import expanduser
+    def detectedChange(self, event):
+        print(f"hey, {event.src_path} has been created!")
+        self.fileList = os.listdir(self.downloadPath)
+        self.unprocessed = len(self.fileList)
+        self.transferIteration()
 
-# class launcher():
-#     def __init__(self):
-#         self.downloadPath = expanduser("~/Downloads")
-#         self.fileList = os.listdir(self.downloadPath)
-#         self.unprocessed = len(self.fileList)
-#         self.extensionList = [(".exe", "D:/Executables"),
-#                               (".ifc", "D:/Fichiers IFC")]
-#         self.processed = 0
-#         self.transferIteration()
+    def launchObserver(self):
+        patterns = "*"
+        ignore_patterns = ""
+        ignore_directories = False
+        case_sensitive = True
+        event_handler = PatternMatchingEventHandler(
+            patterns, ignore_patterns, ignore_directories, case_sensitive)
+        observer = Observer()
+        observer.schedule(event_handler, self.downloadPath, recursive=False)
+        observer.start()
+        event_handler.on_created = self.detectedChange
+        event_handler.on_modified = self.detectedChange
 
-#     def transferIteration(self):
-#         for file in self.fileList:
-#             for extension in self.extensionList:
-#                 if file.find(extension[0]) != -1:
-#                     current = self.downloadPath + "\\" + file
-#                     if self.isValid(extension[-1]):
-#                         destination = extension[-1] + "\\" + file
-#                         fileTransfert = transfert(current, destination)
-#                         if fileTransfert:
-#                             self.processed += 1
-#                             self.unprocessed -= 1
-#         return True
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
 
-#     def isValid(self, directory):
-#         try:
-#             if os.path.isdir(directory):
-#                 return True
-#             else:
-#                 os.mkdir(directory)
-#                 return True
-#         except OSError:
-#             print("OS Error trying to create directory %s" % directory)
-#             return False
+    def transferIteration(self):
+        for file in self.fileList:
+            for extension in self.extensionList:
+                if file.find(extension[0]) != -1:
+                    current = self.downloadPath + "\\" + file
+                    if self.isValid(extension[-1]):
+                        destination = extension[-1] + "\\" + file
+                        fileTransfert = transfert(current, destination)
+                        if fileTransfert:
+                            self.processed += 1
+                            self.unprocessed -= 1
+        return True
 
-#     def getCountProcessed(self):
-#         return self.processed
+    def isValid(self, directory):
+        try:
+            if os.path.isdir(directory):
+                return True
+            else:
+                os.mkdir(directory)
+                return True
+        except OSError:
+            print("OS Error trying to create directory %s" % directory)
+            return False
 
-#     def getCountRemaining(self):
-#         return self.unprocessed
+    def getCountProcessed(self):
+        return self.processed
 
-
-# class transfert():
-#     def __init__(self, current, destination):
-#         self.current = current
-#         self.destination = destination
-#         self.processTransfert(self.current, self.destination)
-
-#     def processTransfert(self, current, destination):
-#         shutil.move(current, destination)
-#         return True
-
-
-# def main():
-#     processed = launcher()
-#     if processed:
-#         print("Nombre de fichiers transferes : {}. Nombre de fichier(s) restant(s) : {}".format(
-#             processed.getCountProcessed(), processed.getCountRemaining()))
+    def getCountRemaining(self):
+        return self.unprocessed
 
 
-# if __name__ == '__main__':
-#     main()
+class transfert():
+    def __init__(self, current, destination):
+        self.current = current
+        self.destination = destination
+        self.processTransfert(self.current, self.destination)
+
+    def processTransfert(self, current, destination):
+        shutil.move(current, destination)
+        return True
+
+
+def main():
+    processed = launcher()
+    if processed:
+        print("Nombre de fichiers transferes : {}. Nombre de fichier(s) restant(s) : {}".format(
+            processed.getCountProcessed(), processed.getCountRemaining()))
+
+
+if __name__ == '__main__':
+    main()
