@@ -8,7 +8,6 @@ from os.path import expanduser
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
-
 class launcher():
     def __init__(self):
         self.downloadPath = expanduser("~/Downloads")
