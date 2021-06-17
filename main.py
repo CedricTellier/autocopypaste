@@ -12,7 +12,7 @@ from watchdog.observers import Observer
 class launcher():
     def __init__(self):
         self.downloadPath = expanduser("~/Downloads")
-        self.extensionList = [(".exe", "D:/Executables"),
+        self.extensionList = [(".exe", "C:/Executables"),
                               (".ifc", "D:/Fichiers IFC")]
         self.processed = 0
         self.launchObserver()
